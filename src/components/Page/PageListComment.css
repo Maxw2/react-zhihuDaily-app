@@ -1,0 +1,40 @@
+.page-list-comment{
+    display: flex;
+    width:100%;
+    height:45px;
+    background: white;
+    border-top: 0.5px solid rgb(211, 211, 211);
+    position: absolute;
+    bottom:-3px;
+    left:0px;
+}
+
+.page-list-comment .icon {
+    width: 20%;
+    height:100%;
+}
+
+.page-list-comment-img {
+    width:100%;
+    height: 100%;
+    text-align: center;
+    line-height: 40px;
+}
+.page-list-comment-img img {
+    width: 22px;
+}
+.page-list-comment .icon:nth-child(1){
+    transform: rotate(90deg)
+}
+
+.page-list-comment-number {
+    position: absolute;
+    top: 5px;
+    right:15px;
+    width:22px;
+    height:12px;
+    background:#2ab0ed;
+    font-size: 10px;
+    color: white;
+    text-align: center
+}
