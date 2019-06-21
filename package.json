@@ -2,8 +2,7 @@
   "name": "react-zhihu",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://maxw2.github.io/react-zhihuDaily-app/",
-  "proxy": "https://news-at.zhihu.com/api/4",
+  "homepage": "https://maxw2.github.io/react-zhihuDaily-app",
   "dependencies": {
     "axios": "^0.18.0",
     "react": "^16.8.6",

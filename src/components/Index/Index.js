@@ -44,18 +44,11 @@ class Index extends React.Component {
             el.ontouchend = null
         }
     }
-    // 服务器跨域
-    getLatest(){
-        Axios.get('https://news-at.zhihu.com/api/4/news/latest')
-            .then(res=>{
-                console.log(res)
-            })
-    }
     componentDidMount() {
         this.container = document.querySelector('.container')
         this.tabWidth = document.querySelector('.tab').clientWidth
         this.container.style.transform = `translateX(-${this.tabWidth}px)`
-        this.getLatest()
+        
     }
     render() {
         return (
