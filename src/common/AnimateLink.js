@@ -17,7 +17,6 @@ const AnimateLink = (props)=>{
         let outSide_to = -(document.documentElement.clientWidth / 2) + outSide_from
         let inSide = props.inSide
         let inSide_to = -document.documentElement.clientWidth
-        
         animate(outSide_from,outSide_to,outSide)
         animate(0,inSide_to,inSide)
     }

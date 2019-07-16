@@ -5,6 +5,7 @@
   "homepage": "https://maxw2.github.io/react-zhihuDaily-app",
   "dependencies": {
     "axios": "^0.18.0",
+    "crash-scroll": "^1.0.4",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-redux": "^7.0.3",
@@ -37,6 +38,7 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^2.0.1"
+    "gh-pages": "^2.0.1",
+    "serve": "^11.0.2"
   }
 }

@@ -32,7 +32,7 @@ let CommentBot = (props) => {
     return (
         <div className='comment-bottom' style={style}>
             <div className='comment-bot-arrow' style={{ position: 'absolute', left: '15px', transform: 'rotate(90deg)' }} >
-                <img src={arrow} alt='arrow' style={{ width: '30px', height: '30px' }} onTouchStart={onTouchStart.bind(this)} />
+                <img src={arrow} alt='arrow' style={{ width: '30px', height: '30px' }} onClick={onTouchStart.bind(this)} />
             </div>
             <div className='text'>
                 <img src={comment} alt='comment' style={{ width: '15px', height: '15px', marginRight: '5px' }} />

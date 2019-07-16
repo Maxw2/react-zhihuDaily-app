@@ -12,7 +12,7 @@ const ContentBanner = (props) => {
     }
     const options = {
         scrollX: true,
-        direction: 'X',
+        direction: 'x',
         swiper: {
             loop: true
         }

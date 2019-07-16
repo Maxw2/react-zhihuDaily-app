@@ -1,6 +1,6 @@
 const _Defalut = function (CScroll) {
     CScroll.prototype.defalut = function () {
-        this.obj = {
+        this.defalut_option = {
             scrollX: false,                 // X轴滑动
             scrollBar: false,               // 显示滚动条
             inertia: true,                  // 惯性滑动
@@ -48,7 +48,7 @@ const _Defalut = function (CScroll) {
         this.$pos = {
             x: 0,
             y: 0,
-            num: null
+            num: 0,                         //目前只能非循环显示
         };
         //私有变量
         this._this = {
@@ -58,7 +58,6 @@ const _Defalut = function (CScroll) {
             mt: null,
             mx: null,
             my: null,
-            ut: null,
             vx: null,                       //mx - dx
             vy: null,                       //my - dy
             vt: null,                       //mt - dt
@@ -67,7 +66,8 @@ const _Defalut = function (CScroll) {
             num: 0,                         //swiper 当前元素指针
             loopLock: false,                //无缝滑动锁       
             pullDown: false,
-            pullUp: false
+            pullUp: false,
+            direction: false,               // 是否执行过direction函数 并且显示direction方向
         };
 
         // 函数绑定数据
@@ -101,7 +101,7 @@ const _Data = function (CScroll) {
      */
     CScroll.prototype.initData = function () {
         this.defalut();
-        this.$op = this.extend(this.obj, this.op);
+        this.$op = this.extend(this.defalut_option, this.op);
         this.initDom();
     };
 
@@ -129,9 +129,7 @@ const _Data = function (CScroll) {
     };
 
     /**
-     * 
      * @method 合并传入的设置
-     * 
      * @param  {Object} defalut 初始设置
      * @param  {Object} options 外部传入设置  
      * @return {Object}         返回合并后的设置
@@ -157,12 +155,17 @@ const _Data = function (CScroll) {
         }
         return def
     };
-
+    /**
+     * @method 刷新Dom数据
+     */
     CScroll.prototype.refresh = function () {
         this.initDom();
         this.modeRecogn();
         this._setPos();
     };
+    /**
+     * @method 初始化pos位置
+     */
     CScroll.prototype.initSetPos = function (){
         this.$pos.x = 0;
         this.$pos.y = 0;
@@ -251,8 +254,13 @@ const _Inertia = function (CScroll) {
         //option 设置
         if (!this.$op.inertia) return
         //  双重判断是否开启惯性滑动
-        let time = this._this.ut - this._this.mt;
-        time < 40 ? this._this.ine = true : this._this.ine = false;
+        if (this._this.vt < 40 && Math.abs(this._this.vy) > 1 && !this.$op.scrollX) {
+            this._this.ine = true;
+        } else if (this._this.vt < 40 && !this.$op.scrollX && Math.abs(this._this.vx) > 1) {
+            this._this.ine = true;
+        }else{
+            this._this.ine = false;
+        }
         // 超出区域禁止惯性滑动
         if (this.outSide()) this._this.ine = false;
 
@@ -275,9 +283,15 @@ const _Inertia = function (CScroll) {
         if (!this.$op.inertia) return
         let a = null;
         // 如果friction惯性值小于1 退出函数
-        if (Math.abs(this._this.friction) < 1) {
+        if (Math.abs(this._this.friction) < 1 ) {
+            if(this.$op.sideLock[0] && this.$pos.y >= this.$op.sideLock[0]){
+                window.cancelAnimationFrame(this.$event.time);
+                this.$pos.y = this.$op.sideLock[0];
+                this.setPos();
+                return 
+            }
             window.cancelAnimationFrame(this.$event.time);
-            this.setEase();
+            // this.setEase()
             return
         }
         //判断是否超出内容区
@@ -303,6 +317,7 @@ const _Inertia = function (CScroll) {
 const _SetEase = function (CScroll) {
     
     CScroll.prototype.setEase = function () {
+        let time = 0.2;
         if (this.cancelEase()) {
             if (this.$op._swiper && this.$op.swiper.loop) {
                 this.loopJump();
@@ -314,15 +329,15 @@ const _SetEase = function (CScroll) {
             //Left
             if (this.outSide('left')) {
                 let a = this.$pos.x - this.$dom.scroll_L;
-                this.$pos.x -= a * 0.1;
+                this.$pos.x -= a * time;
                 if (this.$pos.x - this.$dom.scroll_L < 1) this.$pos.x = this.$dom.scroll_L;
                 this.setPos(this.$pos.x);
                 this.$event.timer = window.requestAnimationFrame(this.setEase.bind(this));
             }
-            // Right
+            // Right  
             if (this.outSide('right')) {
                 let a = this.$pos.x + this.$dom.scroll_R;
-                this.$pos.x -= a * 0.1;
+                this.$pos.x -= a * time;
                 if (Math.abs(this.$pos.x) - this.$dom.scroll_R < 1) this.$pos.x = -this.$dom.scroll_R;
                 this.setPos(this.$pos.x);
                 this.$event.timer = window.requestAnimationFrame(this.setEase.bind(this));
@@ -331,7 +346,7 @@ const _SetEase = function (CScroll) {
             //Top
             if (this.outSide('top')) {
                 let a = this.$pos.y - this.$dom.scroll_T; // 回弹距离
-                this.$pos.y -= a * 0.1;
+                this.$pos.y -= a * time;
                 if (Math.abs(this.$pos.y) - this.$dom.scroll_T < 1) this.$pos.y = this.$dom.scroll_T; // 校准定位 
                 this.setPos(this.$pos.y);
                 this.$event.timer = window.requestAnimationFrame(this.setEase.bind(this));
@@ -339,7 +354,7 @@ const _SetEase = function (CScroll) {
             //Bottom
             if (this.outSide('bottom')) {
                 let a = this.$pos.y + this.$dom.scroll_B;  // 回弹距离
-                this.$pos.y -= a * 0.1;
+                this.$pos.y -= a * time;
                 if (Math.abs(this.$pos.y) - this.$dom.scroll_B < 1) this.$pos.y = -this.$dom.scroll_B; // 校准定位
                 this.setPos(this.$pos.y);
                 this.$event.timer = window.requestAnimationFrame(this.setEase.bind(this));
@@ -371,31 +386,35 @@ const _Direction = function (CScroll) {
      */
     CScroll.prototype.direction = function () {
         let direction = this.$op.direction;
-        
-        if(direction === 'X' || direction === 'x'){
-            if(Math.abs(this._this.vx) > 1) {
-                console.log('x');
-                this.$op.stopPropagation = true;
-                this.$op.skipCurrent = false;
-                this._this.direction = true;
-                
-            }else{
-                console.log('y');
-                this.$op.stopPropagation = false;
-                this.$op.skipCurrent = true;
-                this._this.direction = true;
+        let vx = this._this.vx;
+        let vy = this._this.vy;
+        if (direction === 'X' || direction === 'x') {
+            if (Math.abs(this._this.vx) > 2) {
+                if (Math.abs(vx) > Math.abs(vy)) {
+                    this.$op.stopPropagation = true;
+                    this.$op.skipCurrent = false;
+                    this._this.direction = 'x';
+                } else {
+                    this.$op.stopPropagation = false;
+                    this.$op.skipCurrent = true;
+                    this._this.direction = false;
+                }
             }
-        }else if (direction === 'Y' || direction === 'y') {
-            if(Math.abs(this._this.vx) > 1) {
-                this.$op.stopPropagation = false;
-                this.$op.skipCurrent = true;
-                this._this.direction = true;
-            }else {
-                this.$op.stopPropagation = true;
-                this.$op.skipCurrent = false;
-                this._this.direction = true;
+        } else if (direction === 'Y' || direction === 'y') {
+            if (Math.abs(this._this.vy) > 2) {
+                if (Math.abs(vy) > Math.abs(vx)) {
+                    this.$op.stopPropagation = true;
+                    this.$op.skipCurrent = false;
+                    this._this.direction = 'y';
+                } else {
+                    this.$op.stopPropagation = false;
+                    this.$op.skipCurrent = true;
+                    this._this.direction = false;
+                }
+
             }
         }
+
     };
     /**
      * @method 初始化私有数值
@@ -410,78 +429,127 @@ const _Direction = function (CScroll) {
 
 const _CustomizeEvent = function (CScroll) {
     /**
-     * 
+     * @method 添加事件
+     * @param {String} type 事件类型
+     * @param {Function} func 回调函数
      */
     CScroll.prototype.on = function (type, func) {
         switch (type) {
             case 'onTouchStart':
-                this.$event.onTouchStart = touchStartFunArr(func,this);
+                this.$event.onTouchStart = ontouchStart(func, this);
                 break;
             case 'onTouchMove':
-                this.$event.onTouchMove = addTouchMoveFun(func,this);
+                this.$event.onTouchMove = onTouchMove(func, this);
                 break;
             case 'onTouchEnd':
-                this.$event.onTouchEnd = touchEndFunArr(func,this);
+                this.$event.onTouchEnd = onTouchEnd(func, this);
                 break;
             case 'onScroll':
-                this.$event.onScroll = addScroll(func,this);
+                this.$event.onScroll = onScroll(func, this);
+                break;
+            case 'onSwiper':
+                this.$event.onSwiper = onSwiper(func,this );
                 break;
             default:
                 console.log('输入有效事件');
                 break;
         }
     };
-    // CScroll.prototype.checkEvent = function (type) {
-    //     switch (type) {
-    //         case 'onTouchStart':
-    //             return touchStartFun
-    //         case 'onTouchMove':
-    //             return touchMoveFun
-    //         case 'onTouchEnd':
-    //             return touchEndFun
-    //         case 'onScroll':
-    //             return scrollFun
-    //         default:
-    //             console.log('输入Type')
-    //             break
-    //     }
-    // }
+    /**
+     * @method 移除事件
+     * @param {String} type 事件类型
+     * @param {Function} func 回调函数
+     */
+    CScroll.prototype.removeOn = function (type, func) {
+        let funcArr = null;
+        switch (type){
+            case 'onTouchStart':
+                funcArr = this.$event.touchStartFunArr;
+                break;
+            case 'onTouchMove':
+                funcArr = this.$event.touchMoveFunArr;
+                break;
+            case 'onTouchEnd':
+                funcArr = this.$event.touchEndFunArr;
+                break;
+            case 'onScroll':
+                funcArr = this.$event.scrollFunArr;
+                break;
+            default :
+                console.log('输入的事件类型有误');
+                return 
+        }
+        for(let i = 0;i < funcArr.length;i++){
+            if(funcArr[i] === func){
+                let fn = funcArr.splice(i,1);
+                console.log(fn);
+            }
+        }
+    };
+    /**
+     * @method 检查事件代理的函数
+     * @param {String} type 事件类型
+     */
+    CScroll.prototype.checkEvent = function (type) {
+        let fn = null;
+        switch (type) {
+            case 'onTouchStart':
+                    fn = this.$event.touchStartFunArr;
+                    break;
+                case 'onTouchMove':
+                    fn = this.$event.touchMoveFunArr;
+                    break;
+                case 'onTouchEnd':
+                    fn = this.$event.touchEndFunArr;
+                    break;
+                case 'onScroll':
+                    fn = this.$event.scrollFunArr;
+                    break;
+                default :
+                    console.log('输入的事件类型有误');
+                    return 
+        }
+        return fn
+    };
 
-    function touchStartFunArr(func,that) {
+    function ontouchStart(func, that) {
         that.$event.touchEndFunArr.push(func);
         let funcArr = that.$event.touchEndFunArr;
         return () => {
             funcArr.forEach(fn => {
-                fn(that.$pos,that.el);
+                fn(that.$pos, that.el);
             });
         }
     }
-    function addTouchMoveFun(func,that) {
+    function onTouchMove(func, that) {
         that.$event.touchMoveFunArr.push(func);
         let funcArr = that.$event.touchMoveFunArr;
         return () => {
             funcArr.forEach(fn => {
-                fn(that.$pos,that.el);
+                fn(that.$pos, that.el);
             });
         }
     }
-    function touchEndFunArr(func,that) {
+    function onTouchEnd(func, that) {
         that.$event.touchEndFunArr.push(func);
         let funcArr = that.$event.touchEndFunArr;
         return () => {
             funcArr.forEach(fn => {
-                fn(that.$pos,that.el);
+                fn(that.$pos, that.el);
             });
         }
     }
-    function addScroll(func,that) {
+    function onScroll(func, that) {
         that.$event.scrollFunArr.push(func);
         let funcArr = that.$event.scrollFunArr;
         return () => {
             funcArr.forEach(fn => {
-                fn(that.$pos,that.el);
+                fn(that.$pos, that.el);
             });
         }
+    }
+    function onSwiper(){
+        
     }
 
 };
@@ -514,44 +582,78 @@ const _Event = function (CScroll) {
     // TouchStart
     CScroll.prototype.EventTouchStart = function (ev) {
         // ev.preventDefault()
-        // if (!this.$op.direction || this.$op._swiper) {
-            window.cancelAnimationFrame(this.$event.time);
-            // window.cancelAnimationFrame(this.$event.timer)
-        // }
-        this.initiaDirection();
 
+        window.cancelAnimationFrame(this.$event.time);
+        // if (!this.$op.direction) window.cancelAnimationFrame(this.$event.timer)
+
+        this.initiaDirection();
+        /**
+         * 
+         */
+
+        this._this = {
+            vx:null,
+            vy:null,
+            vt:null
+        };
+
+        /**
+         * 
+         */
         this._this.dt = ev.timeStamp;
         this._this.dx = ev.touches[0].clientX;
         this._this.dy = ev.touches[0].clientY;
 
+        /**
+         * 
+         */
         if (this.$op.direction) this.$op.stopPropagation = true;
+
         this.$event.onTouchStart();
     };
-    
+
     // TouchMove
     CScroll.prototype.EventTouchMove = function (ev) {
+        /**
+         * touchesMove
+         * 处理数据
+         */
         ev.preventDefault();
         // 当前停止还是上层事件停止
         if (this.$op.skipCurrent) return
         if (this.$op.stopPropagation) ev.stopPropagation();
-        // 
+
+        // swiper loop 滑动锁
         if (this.$op._swiper && this.$op.swiper.loop) {
             if (this.loopLock()) return
         }
 
+        // 移动数据
         this._this.mt = ev.timeStamp;
         this._this.mx = ev.touches[0].clientX;
         this._this.my = ev.touches[0].clientY;
-
         this._this.vx = this._this.mx - this._this.dx;
         this._this.vy = this._this.my - this._this.dy;
         this._this.vt = this._this.mt - this._this.dt;
-        //
+ 
+        // 方向滑动判定
         if (this.$op.direction && !this._this.direction) {
             this.direction();
             return
         }
+        // 如果子元素
+        if (this.$op.direction && this._this.direction === this.$op.direction){
+            window.cancelAnimationFrame(this.$event.timer);
+        }else if(!this.$op.direction ){
+            window.cancelAnimationFrame(this.$event.timer);
+        }
+        
+        /**
+         * touchesMove 
+         * 执行阶段
+         */
 
+        // scroll滑动
         if (!this.$op._swiper) {
             if (this.$op.scrollX) {
                 // 判断是否超出内容区
@@ -561,8 +663,9 @@ const _Event = function (CScroll) {
                 this.outSide()
                     ? this.$pos.y += this._this.vy * 0.2 : this.$pos.y += this._this.vy;
             }
+        // swiper滑动
         } else if (this.$op._swiper) {
-            // 自己理解
+            // 
             if (this._this.num === 0 && !this.$op.swiper.loop) {
                 this._this.vx > 0 ?
                     this.$pos.x += this._this.vx * 0.2 : this.$pos.x += this._this.vx;
@@ -574,15 +677,15 @@ const _Event = function (CScroll) {
             }
         }
 
-        if(!this.$op.scrollX && this.$op.sideLock) {
-            if(this.$pos.y >= this.$op.sideLock[0] && this.$op.sideLock[0]) {
+        if (!this.$op.scrollX && this.$op.sideLock) {
+            if (this.$pos.y >= this.$op.sideLock[0] && this.$op.sideLock[0]) {
                 this.$pos.y = this.$op.sideLock[0];
                 this._setPos();
-                return 
-            }else if(this.$pos.y <= -(this.$dom.content_h - this.$dom.el_h + this.$op.sideLock[1]) && this.$op.sideLock[1]){
+                return
+            } else if (this.$pos.y <= -(this.$dom.content_h - this.$dom.el_h + this.$op.sideLock[1]) && this.$op.sideLock[1]) {
                 this.$pos.y = -(this.$dom.content_h - this.$dom.el_h + this.$op.sideLock[1]);
                 this._setPos();
-                return 
+                return
             }
         }
         this.setPos();
@@ -602,10 +705,12 @@ const _Event = function (CScroll) {
             this.changeNum();
         }
 
-        
+
         this.startInertia();
         this.setEase();
+        
         this.$event.onTouchEnd();
+
     };
 
 
@@ -731,6 +836,7 @@ const _Swiper = function (CScroll) {
             if (_this.vx > 0) {
                 if (b > thr) {
                     _this.num = Math.ceil(a);
+                    
                 } else if (b <= thr) {
                     _this.num = Math.floor(a);
                 }
@@ -743,6 +849,7 @@ const _Swiper = function (CScroll) {
                 }
             }
         }
+        this.$pos.num = _this.num;
         this.changeSide();
     };
     /**

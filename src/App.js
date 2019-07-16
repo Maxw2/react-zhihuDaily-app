@@ -48,7 +48,6 @@ function App() {
           </div>
           <div className='comment' style={commentStyle}>
             <Route path='/page/comment/:id' component={Comment} />
-            {/* <Route path='' component={Comment} /> */}
           </div>
         </div>
       </Router>

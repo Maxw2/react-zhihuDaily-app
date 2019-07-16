@@ -1,7 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { bannerAnimate, titleAnimate } from '../../common/animateJs'
-import { getTopData, getBeforeData} from '../../common/getData'
+import { getTopData, getBeforeData } from '../../common/getData'
 
 import ContentTitle from './ContentTitle'
 import ContentTop from './ContentTop'
@@ -33,6 +33,13 @@ class Content extends React.Component {
             this.onScrollDown(ev)
             this.onScrollUp(ev)
         })
+        this.scroll.on('onTouchMove',(ev)=>{
+            console.log(ev)   
+        })
+        this.scroll.on('onTouchEnd',(ev)=>{
+            console.log(ev)
+        })
+
     }
     onScrollUp(ev) {
         let contentHeight = this.scroll.$dom.content_h - this.scroll.$dom.el_h
@@ -71,12 +78,15 @@ class Content extends React.Component {
                     this.props.topData && this.props.beforeData.length ?
                         <>
                             <ContentTitle />
-                            <Scroll className='scroll' style={style} options={{ scrollX: false, direction: 'Y', scrollBar: true, sideLock: [100, null] }} getScroll={this.getScroll.bind(this)}>
+                            <Scroll className='scroll' style={style}
+                                options={{ scrollX: false, scrollBar: true, direction:'y',sideLock: [100, null] }}
+                                getScroll={this.getScroll.bind(this)}>
                                 <div>
                                     <ContentTop topData={this.props.topData} />
                                     <ContentBefore beforeData={this.props.beforeData} />
                                 </div>
-                            </Scroll> </> : <Loading />
+                            </Scroll>
+                        </> : <Loading />
                 }
             </div>
         )

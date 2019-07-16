@@ -1,5 +1,6 @@
 import React from 'react'
-import CScroll from './es_CScroll'
+// import CScroll from './es_CScroll'
+import CScroll from 'crash-scroll'
 
 class Scroll extends React.Component{
     componentDidMount(){

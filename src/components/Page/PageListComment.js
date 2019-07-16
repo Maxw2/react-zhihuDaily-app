@@ -43,10 +43,11 @@ class PageListComment extends React.Component {
 
         // goBack()
     }
-    onCilckDown(ev) {
+    onClickDown(ev) {
         ev.stopPropagation()
         if (!this.props.nextId) return
         this.props.onPageNextListData(this.props.nextId)
+        console.log('123')
     }
     componentDidMount() {
         this.getCommentData()
@@ -61,7 +62,7 @@ class PageListComment extends React.Component {
                 </div>
                 <div className='icon arraw-down' >
                     <div className='page-list-comment-img'>
-                        <img src={arrow} alt='arrow-down' onClick={this.onCilckDown.bind(this)} />
+                        <img src={arrow} alt='arrow-down' onClick={this.onClickDown.bind(this)} />
                     </div>
                 </div>
                 <div className='icon like'>

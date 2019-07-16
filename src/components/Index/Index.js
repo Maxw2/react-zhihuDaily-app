@@ -1,6 +1,5 @@
 import React from 'react'
 import { animate } from '../../common/animateJs'
-import Axios from 'axios'
 
 import Content from '../Content/Content'
 import Tab from '../Tab/Tab'
